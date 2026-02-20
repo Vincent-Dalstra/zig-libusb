@@ -124,6 +124,10 @@ pub fn libusb_get_bus_number(dev: *Device) u8 {
     return translated.libusb_get_bus_number(@ptrCast(dev));
 }
 
+pub fn libusb_get_port_number(dev: *Device) u8 {
+    return translated.libusb_get_port_number(@ptrCast(dev));
+}
+
 pub fn libusb_get_port_numbers(dev: *Device, port_numbers: [*]u8, port_numbers_len: c_int) U32OrErrorCode {
     return castU32OrErrorCode(translated.libusb_get_port_numbers(@ptrCast(dev), @ptrCast(port_numbers), port_numbers_len));
 }

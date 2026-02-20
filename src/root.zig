@@ -1401,6 +1401,12 @@ pub const Device = opaque {
         return c.libusb_get_bus_number(self);
     }
 
+    /// Port number of the parent hub it is attached to.
+    /// Always 0 for root hubs
+    pub fn getPortNumber(self: *Device) u8 {
+        return c.libusb_get_port_number(self);
+    }
+
     pub fn getPortNumbers(self: *Device) !std.meta.Tuple(&.{ [7]u8, usize }) {
         var ports: [7]u8 = undefined;
         const len = try c.libusb_get_port_numbers(self, &ports, 7).result();
