@@ -1407,10 +1407,17 @@ pub const Device = opaque {
         return c.libusb_get_port_number(self);
     }
 
+    /// Consider using getPortNumbers2() instead, which returns a slice
     pub fn getPortNumbers(self: *Device) !std.meta.Tuple(&.{ [7]u8, usize }) {
         var ports: [7]u8 = undefined;
         const len = try c.libusb_get_port_numbers(self, &ports, 7).result();
         return .{ ports, @intCast(len) };
+    }
+
+    /// Use a &[7]u8 buffer - USB permits up to 7 'tiers' of devices
+    pub fn getPortNumbersSlice(self: *Device, buffer: []u8) ![]u8 {
+        const len = try c.libusb_get_port_numbers(self, buffer.ptr, @intCast(buffer.len)).result();
+        return buffer[0..len];
     }
 
     pub fn getSpeed(self: *Device) Speed {
