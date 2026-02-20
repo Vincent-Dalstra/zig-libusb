@@ -1426,7 +1426,7 @@ pub const Device = opaque {
 
     /// Use this with std.mem.sortUnstable()
     /// USB devices cannot have the same bus and port numbers, so unstable sort is fine.
-    fn lessThan(_: void, a: *Device, b: *Device) bool {
+    pub fn lessThan(_: void, a: *Device, b: *Device) bool {
         if (a.getBusNumber() < b.getBusNumber()) return true;
 
         var buf_a: [7]u8 = undefined;
