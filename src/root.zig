@@ -1401,8 +1401,7 @@ pub const Device = opaque {
         return c.libusb_get_bus_number(self);
     }
 
-    /// Port number of the parent hub it is attached to.
-    /// Always 0 for root hubs
+    /// Port number of its parent hub, or 0 if this device is a root hub
     pub fn getPortNumber(self: *Device) u8 {
         return c.libusb_get_port_number(self);
     }
