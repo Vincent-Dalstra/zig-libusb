@@ -863,22 +863,35 @@ pub const ControlSetup = packed struct {
 
 pub const Speed = enum(c_int) {
     /// The OS doesn't report or know the device speed.
-    unknown = 0,
+    unknown = c.translated.LIBUSB_SPEED_UNKNOWN,
 
-    /// The device is operating at low speed (1.5MBit/s).
-    low = 1,
+    low = c.translated.LIBUSB_SPEED_LOW,
+    full = c.translated.LIBUSB_SPEED_FULL,
+    high = c.translated.LIBUSB_SPEED_HIGH,
+    super = c.translated.LIBUSB_SPEED_SUPER,
+    super_plus = c.translated.LIBUSB_SPEED_SUPER_PLUS,
+    super_plus_x2 = c.translated.LIBUSB_SPEED_SUPER_PLUS_X2,
 
-    /// The device is operating at full speed (12MBit/s).
-    full = 2,
+    pub fn inMbps(self: Speed) u32 {
+        return switch (self) {
+            .low => 1, // Technically 1.5Mbps, but this is fine for log output and such
+            .full => 12,
+            .high => 480,
+            .super => 5000,
+            .super_plus => 10000,
+            .super_plus_x2 => 20000,
 
-    /// The device is operating at high speed (480MBit/s).
-    high = 3,
+            .unknown => unreachable,
+        };
+    }
 
-    /// The device is operating at super speed (5000MBit/s).
-    super = 4,
-
-    /// The device is operating at super speed plus (10000MBit/s).
-    super_plus = 5,
+    pub fn format(self: Speed, writer: *std.io.Writer) !void {
+        switch (self) {
+            .unknown => try writer.print("unknown", .{}),
+            .low => try writer.print("1.5M", .{}),
+            else => try writer.print("{}M", .{self.inMbps()}),
+        }
+    }
 };
 
 /// Error codes. Most libusb functions return 0 on success or one of these
@@ -1392,6 +1405,11 @@ pub const Device = opaque {
         var ports: [7]u8 = undefined;
         const len = try c.libusb_get_port_numbers(self, &ports, 7).result();
         return .{ ports, @intCast(len) };
+    }
+
+    pub fn getSpeed(self: *Device) Speed {
+        const sp: c_int = c.libusb_get_device_speed(self);
+        return @enumFromInt(sp);
     }
 };
 

@@ -128,6 +128,10 @@ pub fn libusb_get_port_numbers(dev: *Device, port_numbers: [*]u8, port_numbers_l
     return castU32OrErrorCode(translated.libusb_get_port_numbers(@ptrCast(dev), @ptrCast(port_numbers), port_numbers_len));
 }
 
+pub fn libusb_get_device_speed(dev: *Device) c_int {
+    return translated.libusb_get_device_speed(@ptrCast(dev));
+}
+
 pub fn libusb_clear_halt(dev_handle: *DeviceHandle, endpoint: u8) ErrorCode {
     return castErrorCode(translated.libusb_clear_halt(@ptrCast(dev_handle), endpoint));
 }
