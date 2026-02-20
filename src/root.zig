@@ -1421,8 +1421,7 @@ pub const Device = opaque {
     }
 
     pub fn getSpeed(self: *Device) Speed {
-        const sp: c_int = c.libusb_get_device_speed(self);
-        return @enumFromInt(sp);
+        return @enumFromInt(c.libusb_get_device_speed(self));
     }
 };
 
