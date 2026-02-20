@@ -1423,6 +1423,20 @@ pub const Device = opaque {
     pub fn getSpeed(self: *Device) Speed {
         return @enumFromInt(c.libusb_get_device_speed(self));
     }
+
+    /// Use this with std.mem.sortUnstable()
+    /// USB devices cannot have the same bus and port numbers, so unstable sort is fine.
+    fn lessThan(_: void, a: *Device, b: *Device) bool {
+        if (a.getBusNumber() < b.getBusNumber()) return true;
+
+        var buf_a: [7]u8 = undefined;
+        var buf_b: [7]u8 = undefined;
+        const ports_a = a.getPortNumbersSlice(&buf_a) catch unreachable;
+        const ports_b = b.getPortNumbersSlice(&buf_b) catch unreachable;
+        if (std.mem.order(u8, ports_a, ports_b) == .lt) return true;
+
+        return false;
+    }
 };
 
 /// Structure representing a handle on a USB device. This is an opaque type for
