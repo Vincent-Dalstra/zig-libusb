@@ -12,25 +12,22 @@ pub fn main() !void {
         const devices = try libusb.getDeviceList(); // +1 refcount
         defer libusb.freeDeviceList(devices, true); // -1 refcount
 
+        std.mem.sortUnstable(*libusb.Device, devices, {}, libusb.Device.lessThan);
+
         for (devices) |device| {
             my_device = device.ref(); // +1 refcount
 
             const bus_num = device.getBusNumber();
+            const port_num = device.getPortNumber();
 
-            const ports_arr, const ports_len = device.getPortNumbers() catch unreachable;
-            const ports = ports_arr[0..ports_len];
+            // const ports_arr, const ports_len = device.getPortNumbers() catch unreachable;
+            // const ports = ports_arr[0..ports_len];
+            var buffer: [7]u8 = undefined;
+            const ports = try device.getPortNumbersSlice(&buffer);
 
-            // todo: move into zig-libusb
-            const speed = libusb.c.translated.libusb_get_device_speed(@ptrCast(device));
-            // speed: lsusb -tv
-            // 2 = 12M          libusb.c.translated.LIBUSB_SPEED_FULL
-            // 3 = 480M
-            // 4 = 5000M
-            // 5 = 10000M
-            // 6 = 20000M/x2
-            //
+            const speed = device.getSpeed();
 
-            std.debug.print("Bus {}, Ports: {any}, speed: {}\n", .{ bus_num, ports, speed });
+            std.debug.print("Bus {}, Ports: {any}, Port: {}, speed: {f}\n", .{ bus_num, ports, port_num, speed });
 
             if (ports.len == 0) {
                 root_hubs[root_hubs_len] = device.ref();
