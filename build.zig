@@ -203,4 +203,33 @@ pub fn build(b: *std.Build) void {
     const run_tests = b.addRunArtifact(lib_unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_tests.step);
+
+    // Add a run step for an example program, to test it out
+    // Unit testing is hard, because we can't control what the attached USB stuff is...
+
+    const exe = b.addExecutable(.{
+        .name = "zig_libusb_example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "libusb", .module = libusb_module },
+            },
+        }),
+    });
+
+    b.installArtifact(exe);
+
+    const run_step = b.step("run", "Run the app");
+
+    const run_cmd = b.addRunArtifact(exe);
+    run_step.dependOn(&run_cmd.step);
+
+    run_cmd.step.dependOn(b.getInstallStep());
+
+    // Pass through CLI arguments: `zig build run -- arg1 arg2 etc`
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
 }
