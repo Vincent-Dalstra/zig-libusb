@@ -112,8 +112,9 @@ pub fn libusb_free_config_descriptor(config: ?*ConfigDescriptor) void {
     translated.libusb_free_config_descriptor(@ptrCast(config));
 }
 
-pub fn libusb_get_string_descriptor_ascii(dev_handle: ?*DeviceHandle, desc_index: u8, data: [*]u8, length: c_int) U32OrErrorCode {
-    return castU32OrErrorCode(translated.libusb_get_string_descriptor_ascii(@ptrCast(dev_handle), desc_index, data, length));
+pub fn libusb_get_string_descriptor_ascii(dev_handle: ?*DeviceHandle, desc_index: u8, data: []u8) ![]u8 {
+    const len: usize = try castU32OrErrorCode(translated.libusb_get_string_descriptor_ascii(@ptrCast(dev_handle), desc_index, data.ptr, @intCast(data.len))).result();
+    return data[0..len];
 }
 
 pub fn libusb_open(dev: *Device, dev_handle: *?*DeviceHandle) ErrorCode {

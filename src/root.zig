@@ -1496,14 +1496,8 @@ pub const DeviceHandle = opaque {
 
     pub fn getStringDescriptorAscii(self: *DeviceHandle, desc_index: u8, alloc: Allocator) ![]u8 {
         var temp: [256]u8 = undefined;
-
-        const len = try c.libusb_get_string_descriptor_ascii(self, desc_index, &temp, temp.len).result();
-
-        const slice = temp[0..len];
-
-        const copy = try alloc.dupe(u8, slice);
-
-        return copy;
+        const slice = try c.libusb_get_string_descriptor_ascii(self, desc_index, &temp);
+        return try alloc.dupe(u8, slice);
     }
 };
 
