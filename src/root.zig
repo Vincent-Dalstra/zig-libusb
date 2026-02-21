@@ -1,6 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
 const builtin = @import("builtin");
+const Allocator = std.mem.Allocator;
 
 pub const c = @import("./c.zig");
 
@@ -1491,6 +1492,18 @@ pub const DeviceHandle = opaque {
     /// claimInterface() and re-attach it on releaseInterface().
     pub fn setAutoDetachKernelDriver(self: *DeviceHandle, enable: bool) !void {
         try c.libusb_set_auto_detach_kernel_driver(self, enable).result();
+    }
+
+    pub fn getStringDescriptorAscii(self: *DeviceHandle, desc_index: u8, alloc: Allocator) ![]u8 {
+        var temp: [256]u8 = undefined;
+
+        const len = try c.libusb_get_string_descriptor_ascii(self, desc_index, &temp, temp.len).result();
+
+        const slice = temp[0..len];
+
+        const copy = try alloc.dupe(u8, slice);
+
+        return copy;
     }
 };
 
