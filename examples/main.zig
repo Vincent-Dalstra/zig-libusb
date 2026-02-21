@@ -12,6 +12,7 @@ pub fn main() !void {
         const devices = try libusb.getDeviceList(); // +1 refcount
         defer libusb.freeDeviceList(devices, true); // -1 refcount
 
+        // Put them in order of Bus and Ports
         std.mem.sortUnstable(*libusb.Device, devices, {}, libusb.Device.lessThan);
 
         for (devices) |device| {
@@ -25,9 +26,11 @@ pub fn main() !void {
             var buffer: [7]u8 = undefined;
             const ports = try device.getPortNumbersSlice(&buffer);
 
+            const address = device.getAddress();
+
             const speed = device.getSpeed();
 
-            std.debug.print("Bus {}, Ports: {any}, Port: {}, speed: {f}\n", .{ bus_num, ports, port_num, speed });
+            std.debug.print("Bus {}, Ports: {any}, Port: {}, address: {}, speed: {f}\n", .{ bus_num, ports, port_num, address, speed });
 
             if (ports.len == 0) {
                 root_hubs[root_hubs_len] = device.ref();
@@ -40,10 +43,9 @@ pub fn main() !void {
 
     for (root_hubs[0..root_hubs_len]) |root_hub| {
         const bus_num = root_hub.getBusNumber();
-        const ports_arr, const ports_len = root_hub.getPortNumbers() catch unreachable;
-        const ports = ports_arr[0..ports_len];
+        const speed = root_hub.getSpeed();
 
-        std.debug.print("Bus {}, Ports: {any}\n", .{ bus_num, ports });
+        std.debug.print("Root hub {}, Speed: {f}\n", .{ bus_num, speed });
 
         root_hub.unref();
     }
