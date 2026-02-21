@@ -1,7 +1,19 @@
 const std = @import("std");
+const Allocator = std.mem.Allocator;
+const assert = std.debug.assert;
+
 const libusb = @import("libusb");
 
 pub fn main() !void {
+    // memory
+    // var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    // defer arena.deinit();
+    // const alloc = arena.allocator();
+    var debugAllocator: std.heap.DebugAllocator(.{}) = .init;
+    defer assert(debugAllocator.deinit() == .ok); // Check for leaks
+    const alloc: Allocator = debugAllocator.allocator();
+
+    // libusb
     try libusb.init(.{ .log_level = .info });
     defer libusb.deinit();
 
@@ -17,27 +29,33 @@ pub fn main() !void {
 
         for (devices) |device| {
             my_device = device.ref(); // +1 refcount
+            defer my_device.unref(); // -1 refcount
 
             const bus_num = device.getBusNumber();
             const port_num = device.getPortNumber();
 
-            // const ports_arr, const ports_len = device.getPortNumbers() catch unreachable;
-            // const ports = ports_arr[0..ports_len];
             var buffer: [7]u8 = undefined;
             const ports = try device.getPortNumbersSlice(&buffer);
-
             const address = device.getAddress();
-
             const speed = device.getSpeed();
 
+            for (0..ports.len) |_| std.debug.print("--", .{});
             std.debug.print("Bus {}, Ports: {any}, Port: {}, address: {}, speed: {f}\n", .{ bus_num, ports, port_num, address, speed });
+
+            const desc = try device.getDescriptor();
+            const handle = device.open() catch continue; // +1 refcount when successful
+            defer handle.close(); // -1 refcount
+
+            const serial = handle.getStringDescriptorAscii(desc.iSerialNumber, alloc) catch "";
+            defer alloc.free(serial);
+
+            for (0..ports.len) |_| std.debug.print("  ", .{});
+            std.debug.print("length: {}, serial: {s}\n", .{ desc.bLength, serial });
 
             if (ports.len == 0) {
                 root_hubs[root_hubs_len] = device.ref();
                 root_hubs_len += 1;
             }
-
-            my_device.unref(); // -1 refcount
         }
     }
 
@@ -68,4 +86,5 @@ pub fn main() !void {
 
     // const w = my_interface.writable(write_endpoint.bEndpointAddress, 0);
     // try std.fmt.format(w.writer(), "Hello World\n", .{});
+
 }
