@@ -132,6 +132,10 @@ pub fn libusb_get_port_numbers(dev: *Device, port_numbers: [*]u8, port_numbers_l
     return castU32OrErrorCode(translated.libusb_get_port_numbers(@ptrCast(dev), @ptrCast(port_numbers), port_numbers_len));
 }
 
+pub fn libusb_get_device_address(dev: *Device) u8 {
+    return translated.libusb_get_device_address(@ptrCast(dev));
+}
+
 pub fn libusb_get_device_speed(dev: *Device) c_int {
     return translated.libusb_get_device_speed(@ptrCast(dev));
 }

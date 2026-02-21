@@ -1419,6 +1419,10 @@ pub const Device = opaque {
         return buffer[0..len];
     }
 
+    pub fn getAddress(self: *Device) u8 {
+        return c.libusb_get_device_address(self);
+    }
+
     pub fn getSpeed(self: *Device) Speed {
         return @enumFromInt(c.libusb_get_device_speed(self));
     }
